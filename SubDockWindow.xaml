@@ -17,6 +17,7 @@
         Opacity="0">
 
     <Window.Resources>
+        <!-- Style (bez zmian) -->
         <Style TargetType="ContextMenu">
             <Setter Property="Background" Value="#1E1E1E"/>
             <Setter Property="Foreground" Value="White"/>
@@ -77,39 +78,68 @@
 
         <Style TargetType="ScrollBar">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Width" Value="8"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ScrollBar">
-                        <Grid>
-                            <Border Background="Transparent"/>
-                            <Track Name="PART_Track" IsDirectionReversed="true">
+                        <Grid x:Name="GridRoot" Width="5" Background="Transparent">
+                            <Track Name="PART_Track" IsDirectionReversed="true" Focusable="False">
                                 <Track.Thumb>
-                                    <Thumb>
+                                    <Thumb Focusable="False">
                                         <Thumb.Template>
                                             <ControlTemplate TargetType="Thumb">
-                                                <Border Background="#555" CornerRadius="4"/>
+                                                <Border Background="#555" CornerRadius="2.5"/>
                                             </ControlTemplate>
                                         </Thumb.Template>
                                     </Thumb>
                                 </Track.Thumb>
                             </Track>
                         </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Orientation" Value="Horizontal">
+                                <Setter TargetName="GridRoot" Property="Width" Value="Auto"/>
+                                <Setter TargetName="GridRoot" Property="Height" Value="5"/>
+                                <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False"/>
+                                <Setter Property="Height" Value="5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SubAppButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" 
+                                Background="{TemplateBinding Background}" 
+                                CornerRadius="6" 
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#20FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
 
         <DataTemplate x:Key="GridViewTemplate">
-            <Button Click="SubAppButton_Click"
+            <Button Style="{StaticResource SubAppButtonStyle}"
+                    Click="SubAppButton_Click"
                     PreviewMouseLeftButtonDown="SubAppButton_PreviewMouseLeftButtonDown"
                     PreviewMouseMove="SubAppButton_PreviewMouseMove"
                     DragOver="SubAppButton_DragOver"
                     Drop="SubAppButton_Drop"
                     AllowDrop="True"
                     Margin="5"
-                    Background="Transparent"
-                    BorderBrush="Transparent"
                     ToolTipService.InitialShowDelay="50"
                     ToolTipService.ShowDuration="10000">
                 <Button.ContextMenu>
@@ -129,7 +159,11 @@
                     </ContextMenu>
                 </Button.ContextMenu>
                 <Button.ToolTip>
-                    <ToolTip Content="{Binding Name}" Background="#333" Foreground="White" BorderBrush="#555"/>
+                    <ToolTip Content="{Binding Name}" 
+                             Background="#333" 
+                             Foreground="White" 
+                             BorderBrush="#555"
+                             FontSize="{Binding DataContext.SubIconFontSize, RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </Button.ToolTip>
                 <StackPanel>
                     <Image Source="{Binding IconPath, IsAsync=True}" 
@@ -141,17 +175,27 @@
         </DataTemplate>
 
         <DataTemplate x:Key="ListViewTemplate">
-            <Button Click="SubAppButton_Click"
+            <Button Style="{StaticResource SubAppButtonStyle}"
+                    Click="SubAppButton_Click"
                     PreviewMouseLeftButtonDown="SubAppButton_PreviewMouseLeftButtonDown"
                     PreviewMouseMove="SubAppButton_PreviewMouseMove"
                     DragOver="SubAppButton_DragOver"
                     Drop="SubAppButton_Drop"
                     AllowDrop="True"
-                    Margin="2"
-                    HorizontalContentAlignment="Left"
-                    Background="Transparent"
-                    BorderBrush="Transparent"
-                    ToolTipService.IsEnabled="False">
+                    Width="{Binding DataContext.SubDockListWidth, RelativeSource={RelativeSource AncestorType=Window}}"
+                    Margin="2,1"
+                    HorizontalContentAlignment="Stretch" 
+                    ToolTipService.InitialShowDelay="50"
+                    ToolTipService.ShowDuration="10000">
+
+                <Button.ToolTip>
+                    <ToolTip Content="{Binding Name}" 
+                             Background="#333" 
+                             Foreground="White" 
+                             BorderBrush="#555"
+                             FontSize="{Binding DataContext.SubIconFontSize, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                </Button.ToolTip>
+
                 <Button.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="Uruchom" Click="SubAppButton_Click"/>
@@ -169,23 +213,35 @@
                     </ContextMenu>
                 </Button.ContextMenu>
 
-                <StackPanel Orientation="Horizontal" Width="{Binding DataContext.SubDockListWidth, RelativeSource={RelativeSource AncestorType=Window}}">
-                    <Image Source="{Binding IconPath, IsAsync=True}" 
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Image Grid.Column="0"
+                           Source="{Binding IconPath, IsAsync=True}" 
                            Width="24" 
                            Height="24"
                            Margin="5,2,10,2"
                            RenderOptions.BitmapScalingMode="HighQuality"/>
-                    <TextBlock Text="{Binding Name}" 
+
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Name}" 
                                Foreground="White" 
                                VerticalAlignment="Center"
-                               FontSize="13"
+                               HorizontalAlignment="Left"
+                               FontSize="{Binding DataContext.SubIconFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                               TextWrapping="Wrap"
+                               MaxHeight="40"
                                TextTrimming="CharacterEllipsis"/>
-                </StackPanel>
+                </Grid>
             </Button>
         </DataTemplate>
     </Window.Resources>
 
     <Border x:Name="MainBorder"
+            Tag="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
             Background="{Binding SubDockBackgroundBrush, RelativeSource={RelativeSource AncestorType=Window}}"
             CornerRadius="10" 
             Margin="5" 
@@ -193,11 +249,6 @@
             AllowDrop="True"
             Drop="Window_Drop"
             MouseLeftButtonDown="Window_MouseLeftButtonDown">
-
-        <Border.Style>
-            <Style TargetType="Border">
-            </Style>
-        </Border.Style>
 
         <Border.Effect>
             <DropShadowEffect BlurRadius="15" ShadowDepth="5" Opacity="0.6"/>
@@ -207,12 +258,80 @@
             <ContextMenu>
                 <MenuItem Header="Dodaj skrót do folderu..." Click="AddFolderShortcut_Click"/>
                 <Separator Background="#444" Margin="0,5"/>
+
                 <MenuItem Header="Widok">
                     <MenuItem Header="Siatka (Ikony)" Tag="Grid" IsCheckable="True" Click="ChangeView_Click"
-                              IsChecked="{Binding SubDockViewMode, Converter={x:Static local:EnumBooleanConverter.Instance}, ConverterParameter=Grid}"/>
+                              IsChecked="{Binding PlacementTarget.Tag.GroupData.ViewMode, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={x:Static local:EnumBooleanConverter.Instance}, ConverterParameter=Grid}"/>
                     <MenuItem Header="Lista (Szczegóły)" Tag="List" IsCheckable="True" Click="ChangeView_Click"
-                              IsChecked="{Binding SubDockViewMode, Converter={x:Static local:EnumBooleanConverter.Instance}, ConverterParameter=List}"/>
+                              IsChecked="{Binding PlacementTarget.Tag.GroupData.ViewMode, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={x:Static local:EnumBooleanConverter.Instance}, ConverterParameter=List}"/>
                 </MenuItem>
+
+                <MenuItem Header="Uruchamiaj zawartość przy starcie" 
+                          IsCheckable="True"
+                          IsChecked="{Binding PlacementTarget.Tag.GroupData.RunContentOnStartup, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          Click="ToggleRunContentOnStartup_Click"
+                          ToolTip="Jeśli zaznaczone, wszystkie programy z tej grupy uruchomią się automatycznie po starcie paska."/>
+
+                <Separator Background="#444" Margin="0,5"/>
+
+                <MenuItem Header="Kolor tła grupy">
+                    <MenuItem Header="Domyślny (Ciemny)" Click="ChangeGroupColor_Click" Tag="Default">
+                        <MenuItem.Icon>
+                            <Border Width="12" Height="12" CornerRadius="6" Background="#111111" BorderBrush="Gray" BorderThickness="1"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Czarny (Black)" Click="ChangeGroupColor_Click" Tag="#000000">
+                        <MenuItem.Icon>
+                            <Border Width="12" Height="12" CornerRadius="6" Background="#000000" BorderBrush="Gray" BorderThickness="1"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Niebieski (Blue)" Click="ChangeGroupColor_Click" Tag="#1E90FF">
+                        <MenuItem.Icon>
+                            <Border Width="12" Height="12" CornerRadius="6" Background="#1E90FF" BorderBrush="White" BorderThickness="1"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Czerwony (Red)" Click="ChangeGroupColor_Click" Tag="#DC143C">
+                        <MenuItem.Icon>
+                            <Border Width="12" Height="12" CornerRadius="6" Background="#DC143C" BorderBrush="White" BorderThickness="1"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Zielony (Green)" Click="ChangeGroupColor_Click" Tag="#32CD32">
+                        <MenuItem.Icon>
+                            <Border Width="12" Height="12" CornerRadius="6" Background="#32CD32" BorderBrush="White" BorderThickness="1"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Fioletowy (Purple)" Click="ChangeGroupColor_Click" Tag="#9370DB">
+                        <MenuItem.Icon>
+                            <Border Width="12" Height="12" CornerRadius="6" Background="#9370DB" BorderBrush="White" BorderThickness="1"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator/>
+                    <MenuItem Header="Własny (Hex)..." Click="ChangeGroupColor_Custom_Click"/>
+
+                    <Separator/>
+
+                    <!-- ZMIENIONO TEKST NA 'KRYCIE' -->
+                    <MenuItem StaysOpenOnClick="True">
+                        <MenuItem.Header>
+                            <StackPanel Width="220">
+                                <TextBlock Text="{Binding PlacementTarget.Tag.GroupData.GroupAlpha, RelativeSource={RelativeSource AncestorType=ContextMenu}, StringFormat='Krycie: {0:P0}'}" Margin="0,0,0,5" FontWeight="SemiBold"/>
+                                <Slider Minimum="0.05" Maximum="1.0" 
+                                        Value="{Binding PlacementTarget.Tag.GroupData.GroupAlpha, RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=TwoWay}" 
+                                        SmallChange="0.05" LargeChange="0.1"/>
+                            </StackPanel>
+                        </MenuItem.Header>
+                    </MenuItem>
+                </MenuItem>
+
+                <MenuItem StaysOpenOnClick="True">
+                    <MenuItem.Header>
+                        <StackPanel Width="220">
+                            <TextBlock Text="{Binding PlacementTarget.DataContext.SubIconFontSize, RelativeSource={RelativeSource AncestorType=ContextMenu}, StringFormat='Rozmiar tekstu: {0:0} pt'}" Margin="0,0,0,5" FontWeight="SemiBold"/>
+                            <Slider Minimum="10" Maximum="24" Value="{Binding PlacementTarget.DataContext.SubIconFontSize, RelativeSource={RelativeSource AncestorType=ContextMenu}, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+
                 <Separator Background="#444" Margin="0,5"/>
                 <MenuItem Header="Zamknij grupę" Click="CloseGroup_Click"/>
             </ContextMenu>
@@ -250,11 +369,98 @@
                 </TextBlock.Effect>
             </TextBlock>
 
+            <StackPanel Grid.Row="0" 
+                        Orientation="Horizontal" 
+                        HorizontalAlignment="Right" 
+                        VerticalAlignment="Top" 
+                        Margin="0,8,8,0">
+
+                <Button Click="ToggleAutoOpen_Click" 
+                        Cursor="Hand" 
+                        ToolTip="Autostart grupy przy uruchomieniu programu"
+                        Margin="0,0,6,0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="Transparent" Width="14" Height="14">
+                                <Ellipse x:Name="Dot" 
+                                         Width="10" Height="10" 
+                                         HorizontalAlignment="Center" 
+                                         VerticalAlignment="Center"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <DataTrigger Binding="{Binding GroupData.AutoOpen, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                    <Setter TargetName="Dot" Property="Fill" Value="#40FFFFFF"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding GroupData.AutoOpen, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                    <Setter TargetName="Dot" Property="Fill" Value="#32CD32"/>
+                                </DataTrigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Dot" Property="Width" Value="12"/>
+                                    <Setter TargetName="Dot" Property="Height" Value="12"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button Click="ToggleTopmost_Click" 
+                        Cursor="Hand" 
+                        ToolTip="Przełącz: Zawsze na wierzchu"
+                        Margin="0,0,6,0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="Transparent" Width="14" Height="14">
+                                <Ellipse x:Name="Dot" 
+                                         Fill="#40FFFFFF" 
+                                         Width="10" Height="10" 
+                                         HorizontalAlignment="Center" 
+                                         VerticalAlignment="Center"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Dot" Property="Fill" Value="#FFC107"/>
+                                    <Setter TargetName="Dot" Property="Width" Value="12"/>
+                                    <Setter TargetName="Dot" Property="Height" Value="12"/>
+                                </Trigger>
+                                <DataTrigger Binding="{Binding Topmost, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                    <Setter TargetName="Dot" Property="Fill" Value="#FFC107"/>
+                                </DataTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button Click="CloseGroup_Click"
+                        Cursor="Hand"
+                        ToolTip="Zamknij">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="Transparent" Width="14" Height="14">
+                                <Ellipse x:Name="Dot" 
+                                         Fill="#FF5F56" 
+                                         Width="10" Height="10" 
+                                         HorizontalAlignment="Center" 
+                                         VerticalAlignment="Center"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Dot" Property="Fill" Value="#FF5F56"/>
+                                    <Setter TargetName="Dot" Property="Width" Value="12"/>
+                                    <Setter TargetName="Dot" Property="Height" Value="12"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+            </StackPanel>
+
             <ScrollViewer Grid.Row="1" 
-                          VerticalScrollBarVisibility="Auto" 
-                          HorizontalScrollBarVisibility="Disabled"
-                          PanningMode="VerticalOnly"
-                          Margin="0,5,0,0">
+                          VerticalScrollBarVisibility="Disabled" 
+                          HorizontalScrollBarVisibility="Auto"
+                          PanningMode="HorizontalOnly"
+                          Margin="0,5,0,0"
+                          PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
 
                 <ItemsControl x:Name="SubItemsControl">
                     <ItemsControl.Style>
@@ -262,21 +468,14 @@
                             <Setter Property="ItemsPanel">
                                 <Setter.Value>
                                     <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal" Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"/>
+                                        <WrapPanel Orientation="Vertical" Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"/>
                                     </ItemsPanelTemplate>
                                 </Setter.Value>
                             </Setter>
                             <Setter Property="ItemTemplate" Value="{StaticResource GridViewTemplate}"/>
 
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SubDockViewMode}" Value="List">
-                                    <Setter Property="ItemsPanel">
-                                        <Setter.Value>
-                                            <ItemsPanelTemplate>
-                                                <StackPanel Orientation="Vertical"/>
-                                            </ItemsPanelTemplate>
-                                        </Setter.Value>
-                                    </Setter>
+                                <DataTrigger Binding="{Binding GroupData.ViewMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="List">
                                     <Setter Property="ItemTemplate" Value="{StaticResource ListViewTemplate}"/>
                                 </DataTrigger>
                             </Style.Triggers>

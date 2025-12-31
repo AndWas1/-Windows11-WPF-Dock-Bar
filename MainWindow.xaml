@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="NexusClone" 
         Height="{Binding Data.Config.DockHeight}"
-        Width="600"
+        Width="{Binding Data.Config.DockWidth}"
         WindowStartupLocation="Manual" 
         Top="50"
         Left="100"
@@ -19,16 +19,33 @@
         TextOptions.TextFormattingMode="Display">
 
     <Window.Resources>
+        <!-- STYL CONTEXT MENU: Zaktualizowany o natywną animację WPF (FadeIn) -->
         <Style TargetType="ContextMenu">
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#444"/>
+            <Setter Property="Background" Value="{DynamicResource MenuBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MenuBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="HasDropShadow" Value="True"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ContextMenu">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="5">
+                        <!-- Border z animacją Opacity na Loaded -->
+                        <Border x:Name="MenuBorder"
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="8" 
+                                Padding="5"
+                                Opacity="0">
+                            <Border.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.2"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Border.Triggers>
                             <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
                         </Border>
                     </ControlTemplate>
@@ -36,9 +53,10 @@
             </Setter>
         </Style>
 
+        <!-- STYL MENU ITEM -->
         <Style TargetType="MenuItem">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#E0E0E0"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Padding" Value="10,6"/>
             <Setter Property="Template">
@@ -52,21 +70,26 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <Path x:Name="CheckMark" Data="M 2,5 L 5,8 L 12,1" Stroke="White" StrokeThickness="2" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Path x:Name="CheckMark" Data="M 2,5 L 5,8 L 12,1" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="2" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     <ContentPresenter Grid.Column="1" Content="{TemplateBinding Header}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                    <Path x:Name="Arrow" Grid.Column="2" Data="M 0,0 L 4,3.5 L 0,7" Stroke="#E0E0E0" StrokeThickness="1" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+                                    <Path x:Name="Arrow" Grid.Column="2" Data="M 0,0 L 4,3.5 L 0,7" Stroke="{DynamicResource SecondaryTextBrush}" StrokeThickness="1" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
                                 </Grid>
                             </Border>
                             <Popup x:Name="Popup" Placement="Right" IsOpen="{TemplateBinding IsSubmenuOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
-                                <Border Background="#1E1E1E" BorderBrush="#444" BorderThickness="1" CornerRadius="8" Padding="5" SnapsToDevicePixels="True">
+                                <Border Background="{DynamicResource MenuBackgroundBrush}" 
+                                        BorderBrush="{DynamicResource MenuBorderBrush}" 
+                                        BorderThickness="1" 
+                                        CornerRadius="8" 
+                                        Padding="5" 
+                                        SnapsToDevicePixels="True">
                                     <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
                                 </Border>
                             </Popup>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#3E3E3E"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource ItemHoverBackgroundBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
@@ -81,7 +104,7 @@
         </Style>
 
         <Style TargetType="Separator">
-            <Setter Property="Background" Value="#333333"/>
+            <Setter Property="Background" Value="{DynamicResource SeparatorBrush}"/>
             <Setter Property="Height" Value="1"/>
             <Setter Property="Margin" Value="5,3"/>
             <Setter Property="Template">
@@ -97,6 +120,49 @@
             <MenuItem Header="Dodaj element">
                 <MenuItem Header="Nowy Separator" Click="AddSeparator_Click"/>
                 <MenuItem Header="Nową Grupę (Pod-pasek)" Click="AddSubDock_Click"/>
+            </MenuItem>
+
+            <Separator/>
+
+            <!-- NOWOŚĆ: Sekcja Motywów -->
+            <MenuItem Header="Motywy i Kolory">
+                <MenuItem Header="Wybierz styl">
+                    <MenuItem Header="Ciemny (Domyślny)" Command="{Binding ChangeThemeCommand}" CommandParameter="Dark"/>
+                    <MenuItem Header="Jasny (Light)" Command="{Binding ChangeThemeCommand}" CommandParameter="Light"/>
+                    <MenuItem Header="Cyberpunk (Neon)" Command="{Binding ChangeThemeCommand}" CommandParameter="Cyberpunk"/>
+                    <MenuItem Header="Las (Forest)" Command="{Binding ChangeThemeCommand}" CommandParameter="Forest"/>
+                    <MenuItem Header="Północ (Midnight)" Command="{Binding ChangeThemeCommand}" CommandParameter="Midnight"/>
+                </MenuItem>
+
+                <Separator/>
+
+                <MenuItem Header="Kolor akcentu">
+                    <MenuItem Header="Niebieski" Command="{Binding ChangeAccentCommand}" CommandParameter="#00BFFF">
+                        <MenuItem.Icon>
+                            <Border Width="12" Height="12" CornerRadius="6" Background="#00BFFF" BorderBrush="White" BorderThickness="1"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Czerwony" Command="{Binding ChangeAccentCommand}" CommandParameter="#FF4444">
+                        <MenuItem.Icon>
+                            <Border Width="12" Height="12" CornerRadius="6" Background="#FF4444" BorderBrush="White" BorderThickness="1"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Zielony" Command="{Binding ChangeAccentCommand}" CommandParameter="#00FF00">
+                        <MenuItem.Icon>
+                            <Border Width="12" Height="12" CornerRadius="6" Background="#00FF00" BorderBrush="White" BorderThickness="1"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Pomarańczowy" Command="{Binding ChangeAccentCommand}" CommandParameter="#FFA500">
+                        <MenuItem.Icon>
+                            <Border Width="12" Height="12" CornerRadius="6" Background="#FFA500" BorderBrush="White" BorderThickness="1"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Fioletowy" Command="{Binding ChangeAccentCommand}" CommandParameter="#9370DB">
+                        <MenuItem.Icon>
+                            <Border Width="12" Height="12" CornerRadius="6" Background="#9370DB" BorderBrush="White" BorderThickness="1"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
             </MenuItem>
 
             <Separator/>
@@ -134,6 +200,15 @@
                         <StackPanel Width="240">
                             <TextBlock Text="{Binding Data.Config.HoverRange, StringFormat='Szerokość fali: {0:0} px'}" Margin="0,0,0,5" FontWeight="SemiBold"/>
                             <Slider Minimum="50" Maximum="400" Value="{Binding Data.Config.HoverRange, Mode=TwoWay}" TickFrequency="25" IsSnapToTickEnabled="True"/>
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+
+                <MenuItem StaysOpenOnClick="True">
+                    <MenuItem.Header>
+                        <StackPanel Width="240">
+                            <TextBlock Text="{Binding Data.Config.DockWidth, StringFormat='Szerokość paska: {0:0} px'}" Margin="0,0,0,5" FontWeight="SemiBold"/>
+                            <Slider Minimum="300" Maximum="1920" Value="{Binding Data.Config.DockWidth, Mode=TwoWay}" TickFrequency="50" IsSnapToTickEnabled="True"/>
                         </StackPanel>
                     </MenuItem.Header>
                 </MenuItem>
@@ -251,173 +326,277 @@
             <DropShadowEffect BlurRadius="10" ShadowDepth="5" Opacity="0.5"/>
         </Border.Effect>
 
-        <ItemsControl x:Name="MainItemsControl" ItemsSource="{Binding Data.Shortcuts}" VerticalAlignment="Center" ClipToBounds="False">
+        <Grid>
+            <!-- Przycisk blokady: Mała zielona kropka w lewym górnym rogu -->
+            <ToggleButton IsChecked="{Binding Data.Config.IsDockLocked, Mode=TwoWay}"
+                          HorizontalAlignment="Left" 
+                          VerticalAlignment="Top"
+                          Margin="8,8,0,0"
+                          Width="8" Height="8"
+                          Panel.ZIndex="2000"
+                          ToolTip="Kliknij, aby zablokować pasek (wyłączyć autoukrywanie)">
 
-            <ItemsControl.ItemContainerStyle>
-                <Style TargetType="ContentPresenter">
-                    <Setter Property="Panel.ZIndex" Value="0"/>
-                    <Setter Property="ClipToBounds" Value="False"/>
-                    <Style.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Panel.ZIndex" Value="1000"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </ItemsControl.ItemContainerStyle>
-
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" ClipToBounds="False"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Button Click="AppButton_Click" 
-                            PreviewMouseLeftButtonDown="AppButton_PreviewMouseLeftButtonDown"
-                            PreviewMouseMove="AppButton_PreviewMouseMove"
-                            DragOver="AppButton_DragOver"
-                            Drop="AppButton_Drop"
-                            AllowDrop="True"
-                            Margin="{Binding DataContext.ItemMargin, RelativeSource={RelativeSource AncestorType=Window}}" 
-                            Background="Transparent" 
-                            BorderBrush="Transparent"
-                            ToolTipService.InitialShowDelay="50"
-                            ToolTipService.ShowDuration="10000"
-                            ToolTipService.BetweenShowDelay="0">
-
-                        <Button.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Zmień nazwę..." Click="RenameShortcut_Click"/>
-                                <MenuItem Header="Zmień ikonę..." Click="ChangeIcon_Click"/>
-                                <Separator Background="#444"/>
-
-                                <MenuItem Header="Ustaw hasło" Click="SetPassword_Click">
-                                    <MenuItem.Style>
-                                        <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsSubDock}" Value="False">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding IsPasswordProtected}" Value="True">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </MenuItem.Style>
-                                </MenuItem>
-
-                                <MenuItem Header="Usuń hasło" Click="RemovePassword_Click">
-                                    <MenuItem.Style>
-                                        <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsSubDock}" Value="False">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding IsPasswordProtected}" Value="False">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </MenuItem.Style>
-                                </MenuItem>
-                                <Separator/>
-                                <MenuItem Header="Usuń" Click="DeleteShortcut_Click"/>
-                            </ContextMenu>
-                        </Button.ContextMenu>
-
-                        <Button.ToolTip>
-                            <ToolTip x:Name="NameTooltip" Placement="Bottom" Background="Transparent" BorderThickness="0" HasDropShadow="True" VerticalOffset="5">
-                                <Border Background="#D9101010" CornerRadius="5" Padding="12,6" BorderBrush="#00BFFF" BorderThickness="1">
-                                    <Border.Effect>
-                                        <DropShadowEffect Color="#00BFFF" BlurRadius="10" ShadowDepth="0" Opacity="0.4"/>
-                                    </Border.Effect>
-                                    <TextBlock Text="{Binding Name}" Foreground="White" FontSize="12" FontFamily="Segoe UI" FontWeight="SemiBold"/>
-                                </Border>
-                            </ToolTip>
-                        </Button.ToolTip>
-
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Template">
+                <ToggleButton.Template>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <!-- Przezroczyste tło, żeby łatwiej było trafić myszką -->
+                        <Grid Background="Transparent">
+                            <Ellipse x:Name="Dot" Width="8" Height="8" Fill="#80008000" StrokeThickness="0"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Dot" Property="Fill" Value="#FF00FF00"/>
+                                <Setter TargetName="Dot" Property="Effect">
                                     <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <ContentPresenter />
-                                        </ControlTemplate>
+                                        <DropShadowEffect Color="Lime" BlurRadius="6" ShadowDepth="0" Opacity="0.8"/>
                                     </Setter.Value>
                                 </Setter>
-                            </Style>
-                        </Button.Style>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Dot" Property="Fill" Value="White"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsChecked" Value="True"/>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Dot" Property="Fill" Value="#FFCCFFCC"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </ToggleButton.Template>
+            </ToggleButton>
 
-                        <Grid ClipToBounds="False">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+            <!-- NOWOŚĆ: Przycisk Wygaszacza: Mała żółta kropka pod zieloną -->
+            <Button Click="Screensaver_Click"
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Top"
+                    Margin="8,24,0,0"
+                    Width="8" Height="8"
+                    Panel.ZIndex="2000"
+                    ToolTip="Wygaszacz monitora">
 
-                            <Image x:Name="AppIcon"
-                                   Panel.ZIndex="10"
-                                   Source="{Binding IconPath, IsAsync=True}" 
-                                   Width="{Binding DataContext.Data.Config.IconSize, RelativeSource={RelativeSource AncestorType=Window}}" 
-                                   Height="{Binding DataContext.Data.Config.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
-                                   RenderOptions.BitmapScalingMode="HighQuality">
-                                <Image.RenderTransformOrigin>0.5,0.5</Image.RenderTransformOrigin>
-                                <Image.RenderTransform>
-                                    <ScaleTransform ScaleX="1" ScaleY="1"/>
-                                </Image.RenderTransform>
-                            </Image>
-
-                            <Border x:Name="RunningIndicator"
-                                    Panel.ZIndex="2"
-                                    Width="20" Height="4"
-                                    CornerRadius="2"
-                                    Background="#00BFFF"
-                                    VerticalAlignment="Bottom"
-                                    Margin="0,0,0,-6"
-                                    Visibility="Collapsed">
-                                <Border.Effect>
-                                    <DropShadowEffect Color="#00BFFF" BlurRadius="8" ShadowDepth="0" Opacity="0.8"/>
-                                </Border.Effect>
-                            </Border>
-
-                            <Path x:Name="SubDockIndicator"
-                                  Panel.ZIndex="2"
-                                  Data="M 0,0 L 4,4 L 8,0"
-                                  Stroke="White" StrokeThickness="2"
-                                  VerticalAlignment="Bottom"
-                                  HorizontalAlignment="Right"
-                                  Margin="0,0,2,2"
-                                  Visibility="Collapsed">
-                                <Path.Effect>
-                                    <DropShadowEffect Color="Black" BlurRadius="2" ShadowDepth="1" Opacity="0.8"/>
-                                </Path.Effect>
-                            </Path>
-
-                            <Border x:Name="AppSeparator"
-                                    Width="2"
-                                    Height="{Binding DataContext.Data.Config.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
-                                    Background="White"
-                                    Opacity="0.3"
-                                    Visibility="Collapsed"
-                                    Margin="5,0"/>
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent">
+                            <Ellipse x:Name="Dot" Width="8" Height="8" Fill="#80FFD700" StrokeThickness="0"/>
                         </Grid>
-                    </Button>
-                    <DataTemplate.Triggers>
-                        <DataTrigger Binding="{Binding IsSeparator}" Value="True">
-                            <Setter TargetName="AppIcon" Property="Visibility" Value="Collapsed"/>
-                            <Setter TargetName="RunningIndicator" Property="Visibility" Value="Collapsed"/>
-                            <Setter TargetName="SubDockIndicator" Property="Visibility" Value="Collapsed"/>
-                            <Setter TargetName="AppSeparator" Property="Visibility" Value="Visible"/>
-                            <Setter TargetName="NameTooltip" Property="Visibility" Value="Collapsed"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding IsRunning}" Value="True">
-                            <Setter TargetName="RunningIndicator" Property="Visibility" Value="Visible"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding IsSubDock}" Value="True">
-                            <Setter TargetName="SubDockIndicator" Property="Visibility" Value="Visible"/>
-                        </DataTrigger>
-                    </DataTemplate.Triggers>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Dot" Property="Fill" Value="Yellow"/>
+                                <Setter TargetName="Dot" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="Yellow" BlurRadius="6" ShadowDepth="0" Opacity="0.8"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <ItemsControl x:Name="MainItemsControl" ItemsSource="{Binding Data.Shortcuts}" VerticalAlignment="Center" ClipToBounds="False">
+
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="Panel.ZIndex" Value="0"/>
+                        <Setter Property="ClipToBounds" Value="False"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Panel.ZIndex" Value="1000"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" ClipToBounds="False"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <!-- 
+                            NAPRAWA: Usunięto XamlFlair (powodował błędy XamlReader).
+                            Zastosowano czysty WPF EventTrigger na Loaded, aby uzyskać efekt "FadeInUp" bez zewnętrznych bibliotek.
+                        -->
+                        <Button Click="AppButton_Click" 
+                                PreviewMouseLeftButtonDown="AppButton_PreviewMouseLeftButtonDown"
+                                PreviewMouseMove="AppButton_PreviewMouseMove"
+                                DragOver="AppButton_DragOver"
+                                Drop="AppButton_Drop"
+                                AllowDrop="True"
+                                Margin="{Binding DataContext.ItemMargin, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                Background="Transparent" 
+                                BorderBrush="Transparent"
+                                ToolTipService.InitialShowDelay="50"
+                                ToolTipService.ShowDuration="10000"
+                                ToolTipService.BetweenShowDelay="0">
+
+                            <!-- Animacja wejścia (Fade In + Slide Up) w czystym WPF -->
+                            <Button.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.6">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Button.Triggers>
+
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Zmień nazwę..." Click="RenameShortcut_Click"/>
+                                    <MenuItem Header="Zmień ikonę..." Click="ChangeIcon_Click"/>
+                                    <Separator Background="{DynamicResource SeparatorBrush}"/>
+
+                                    <MenuItem Header="Ustaw hasło" Click="SetPassword_Click">
+                                        <MenuItem.Style>
+                                            <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSubDock}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsPasswordProtected}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </MenuItem.Style>
+                                    </MenuItem>
+
+                                    <MenuItem Header="Usuń hasło" Click="RemovePassword_Click">
+                                        <MenuItem.Style>
+                                            <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSubDock}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsPasswordProtected}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </MenuItem.Style>
+                                    </MenuItem>
+                                    <Separator/>
+                                    <MenuItem Header="Usuń" Click="DeleteShortcut_Click"/>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+
+                            <Button.ToolTip>
+                                <ToolTip x:Name="NameTooltip" Placement="Bottom" Background="Transparent" BorderThickness="0" HasDropShadow="True" VerticalOffset="5">
+                                    <Border Background="#D9101010" CornerRadius="5" Padding="12,6" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+                                        <Border.Effect>
+                                            <DropShadowEffect Color="{Binding Color, Source={StaticResource AccentBrush}}" BlurRadius="10" ShadowDepth="0" Opacity="0.4"/>
+                                        </Border.Effect>
+                                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12" FontFamily="Segoe UI" FontWeight="SemiBold"/>
+                                    </Border>
+                                </ToolTip>
+                            </Button.ToolTip>
+
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <!-- Inicjalizacja RenderTransform -->
+                                    <Setter Property="RenderTransform">
+                                        <Setter.Value>
+                                            <TranslateTransform/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <ContentPresenter />
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <!-- Trigger kliknięcia (WPF) -->
+                                    <Style.Triggers>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <TranslateTransform Y="2"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+
+                            <Grid ClipToBounds="False">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Image x:Name="AppIcon"
+                                       Panel.ZIndex="10"
+                                       Source="{Binding IconPath, IsAsync=True}" 
+                                       Width="{Binding DataContext.Data.Config.IconSize, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                       Height="{Binding DataContext.Data.Config.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                       RenderOptions.BitmapScalingMode="HighQuality">
+                                    <Image.RenderTransformOrigin>0.5,0.5</Image.RenderTransformOrigin>
+                                    <Image.RenderTransform>
+                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                    </Image.RenderTransform>
+                                </Image>
+
+                                <Border x:Name="RunningIndicator"
+                                        Panel.ZIndex="2"
+                                        Width="20" Height="4"
+                                        CornerRadius="2"
+                                        Background="{DynamicResource AccentBrush}"
+                                        VerticalAlignment="Bottom"
+                                        Margin="0,0,0,-6"
+                                        Visibility="Collapsed">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="{Binding Color, Source={StaticResource AccentBrush}}" BlurRadius="8" ShadowDepth="0" Opacity="0.8"/>
+                                    </Border.Effect>
+                                </Border>
+
+                                <Path x:Name="SubDockIndicator"
+                                      Panel.ZIndex="2"
+                                      Data="M 0,0 L 4,4 L 8,0"
+                                      Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="2"
+                                      VerticalAlignment="Bottom"
+                                      HorizontalAlignment="Right"
+                                      Margin="0,0,2,2"
+                                      Visibility="Collapsed">
+                                    <Path.Effect>
+                                        <DropShadowEffect Color="Black" BlurRadius="2" ShadowDepth="1" Opacity="0.8"/>
+                                    </Path.Effect>
+                                </Path>
+
+                                <Border x:Name="AppSeparator"
+                                        Width="2"
+                                        Height="{Binding DataContext.Data.Config.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        Background="{DynamicResource PrimaryTextBrush}"
+                                        Opacity="0.3"
+                                        Visibility="Collapsed"
+                                        Margin="5,0"/>
+                            </Grid>
+                        </Button>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsSeparator}" Value="True">
+                                <Setter TargetName="AppIcon" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="RunningIndicator" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="SubDockIndicator" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="AppSeparator" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="NameTooltip" Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                <Setter TargetName="RunningIndicator" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsSubDock}" Value="True">
+                                <Setter TargetName="SubDockIndicator" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
     </Border>
 </Window>
